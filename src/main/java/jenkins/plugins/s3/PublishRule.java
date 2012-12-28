@@ -12,7 +12,8 @@ public class PublishRule extends AbstractDescribableImpl<PublishRule> {
     private String include;
     private String exclude;
     private String to;
-
+    private String permissions;
+    
     public String getInclude() {
         return include;
     }
@@ -28,18 +29,24 @@ public class PublishRule extends AbstractDescribableImpl<PublishRule> {
     public String getWorkingDir() {
         return workingDir;
     }
+    
+    public String getPermissions() {
+        return permissions;
+    }
 
     @DataBoundConstructor
-    public PublishRule(String workingDir, String include, String exclude, String to) {
+    public PublishRule(String workingDir, String include, String exclude, String to, String permissions) {
         this.workingDir = workingDir;
         this.include = include;
         this.exclude = exclude;
         this.to = to;
+        this.permissions = permissions;
     }
 
+    @Override
     public String toString() {
-        return String.format("{workingDir: %s, include: %s, exclude: %s, to: %s}", this.workingDir,
-                this.include, this.exclude, this.to);
+        return String.format("{workingDir: %s, include: %s, exclude: %s, to: %s, permissions: %s}", 
+                this.workingDir, this.include, this.exclude, this.to, this.permissions);
     }
 
     @Extension

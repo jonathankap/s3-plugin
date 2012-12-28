@@ -13,7 +13,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 public class S3Profile {
     private String name;
@@ -82,9 +84,10 @@ public class S3Profile {
                 i++;
             }
 
-            listener.getLogger().println(
-                    "Copying " + workingDir.getRemote() + " : " + file.getRemote().substring(i)
-                            + " -> " + rule.getTo());
+            //listener.getLogger().println(
+            //        "Copying " + workingDir.getRemote() + " : " + file.getRemote().substring(i)
+            //                + " -> " + rule.getTo());
+            
             try {
                 String bucket = Util.replaceMacro(rule.getTo(), envVars);
                 String destKey = "";
@@ -100,9 +103,27 @@ public class S3Profile {
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(Mimetypes.getInstance().getMimetype(file.getName()));
                 metadata.setContentLength(file.length());
-                getClient().putObject(bucket, destKey, file.read(), metadata);
-
+                
+                //    " with access key: " + accessKey + " secret: " +
+                //    secretKey);
+                
+                PutObjectRequest req = new PutObjectRequest(bucket, destKey, file.read(), metadata);
+                
+                // set access control rule
+                if (rule.getPermissions() != null && !rule.getPermissions().isEmpty()) {
+                    req.setCannedAcl(CannedAccessControlList.valueOf(rule.getPermissions()));
+                }    
+                
+                listener.getLogger().println(
+                    "Put: bucket: " + bucket + " destKey: " + destKey + 
+                    " file: " + file + " metadata: " + metadata.getContentType() +
+                    " permissions: " + rule.getPermissions());
+                
+                getClient().putObject(req);
             } catch (IOException e) {
+                listener.getLogger().println("Error copying " +
+                        workingDir.getRemote() + " : " + 
+                        file.getRemote().substring(i)  + " -> " + rule.getTo());
                 e.printStackTrace(listener.getLogger());
                 listener.getLogger().println("Continuing with the other files");
             }
